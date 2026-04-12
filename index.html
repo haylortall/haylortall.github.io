@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>♡ Taylor</title>
+
+<meta property="og:title" content="♡ Taylor">
+<meta property="og:image" content="https://haylortall.github.io/preview.png">
+
+<style>
+body {
+  margin:0;
+  background:#050505;
+  color:#eae6df;
+  font-family: Georgia, serif;
+}
+
+.container {
+  max-width:720px;
+  margin:80px auto;
+  padding:0 20px;
+}
+
+h1 {
+  font-size:64px;
+  font-weight:500;
+  margin-bottom:40px;
+  letter-spacing:-1px;
+}
+
+button {
+  width:100%;
+  padding:18px;
+  margin:10px 0;
+  background:transparent;
+  color:#eae6df;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:18px;
+  font-size:18px;
+  cursor:pointer;
+
+  transition:
+    transform 0.35s cubic-bezier(.19,1,.22,1),
+    border-color 0.35s,
+    background 0.35s;
+}
+
+button:hover {
+  transform:translateY(-2px);
+  border-color:rgba(255,255,255,0.35);
+  background:rgba(255,255,255,0.03);
+}
+
+/* slower, floaty burst */
+.burst {
+  position:fixed;
+  pointer-events:none;
+  z-index:9999;
+  animation:float 1.4s cubic-bezier(.19,1,.22,1) forwards;
+}
+
+@keyframes float {
+  0% {
+    opacity:0;
+    transform:translate(-50%,-50%) scale(0.6);
+  }
+  15% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+    transform:
+      translate(calc(-50% + var(--dx)), calc(-50% + var(--dy)))
+      scale(1.2)
+      rotate(var(--rot));
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>♡ Taylor</h1>
+
+  <button onclick="go(event,'https://haylortall.github.io/star/','⭐ ✨ 💫')">☆ Star</button>
+  <button onclick="go(event,'https://haylortall.github.io/whatashame/','🥀 💔')">🥀 What a Shame</button>
+  <button onclick="go(event,'https://haylortall.github.io/besoserious/','🙄 😑')">🙄 Be So Serious</button>
+  <button onclick="go(event,'https://haylortall.github.io/jersey/','🏈 ⭐')">🏈 Jersey</button>
+  <button onclick="go(event,'https://haylortall.github.io/potato/','🥔 🍟')">🥔 Potato</button>
+  <button onclick="go(event,'https://haylortall.github.io/calibrate/','🎯 ✴️')">🎯 Calibrate</button>
+  <button onclick="go(event,'https://haylortall.github.io/keeptapping/','👆 💥')">👆 Keep Tapping</button>
+  <button onclick="go(event,'https://haylortall.github.io/mixedsignals/','📡 ⚡')">📡 Mixed Signals</button>
+</div>
+
+<script>
+function go(e,url,emojiString){
+  const emojis = emojiString.split(" ");
+  
+  for(let i=0;i<10;i++){
+    let el=document.createElement("div");
+    el.className="burst";
+    el.innerText=emojis[i % emojis.length];
+
+    el.style.left=e.clientX+"px";
+    el.style.top=e.clientY+"px";
+
+    el.style.setProperty("--dx",(Math.random()*220-110)+"px");
+    el.style.setProperty("--dy",(-100-Math.random()*150)+"px");
+    el.style.setProperty("--rot",(Math.random()*120-60)+"deg");
+
+    el.style.fontSize=(20+Math.random()*18)+"px";
+
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),1400);
+  }
+
+  setTimeout(()=>{
+    window.location=url;
+  },400);
+}
+</script>
+
+</body>
+</html>
