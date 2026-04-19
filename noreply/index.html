@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>no reply</title>
+  <meta property="og:title" content="no reply detected">
+<meta property="og:description" content="analysis in progress">
+<meta property="og:image" content="preview.png">
+  <style>
+    :root{
+      --bg:#0b0d12;
+      --ink:#f5f7fb;
+      --muted:#9ca6ba;
+      --line:rgba(255,255,255,.08);
+      --accent:#8fb3ff;
+      --accent-soft:rgba(143,179,255,.18);
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(circle at 12% 10%, rgba(143,179,255,.14), transparent 24%),
+        radial-gradient(circle at 88% 14%, rgba(255,143,192,.10), transparent 18%),
+        linear-gradient(180deg, #10141d, var(--bg));
+      overflow-x:hidden;
+      transition:background .35s ease;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.06;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size:24px 24px;
+      mix-blend-mode:screen;
+    }
+
+    .wrap{
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      padding:24px;
+      position:relative;
+      z-index:1;
+    }
+
+    .app{
+      width:min(980px,100%);
+      background:linear-gradient(180deg, rgba(23,29,42,.96), rgba(17,21,31,.98));
+      border:1px solid var(--line);
+      box-shadow:0 24px 80px rgba(0,0,0,.45);
+      overflow:hidden;
+      transition:border-color .25s ease, transform .12s ease, background .25s ease;
+    }
+
+    .app.flash{ transform:scale(1.005); }
+
+    .bar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+
+    .dots{display:flex; gap:8px;}
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background:rgba(255,255,255,.25);
+    }
+
+    .title{
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+
+    .main{ padding:24px; }
+
+    .top{
+      display:grid;
+      grid-template-columns:84px 1fr;
+      gap:16px;
+      align-items:start;
+      margin-bottom:18px;
+    }
+
+    .emoji-box{
+      position:relative;
+      min-height:84px;
+      display:grid;
+      place-items:center;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      overflow:hidden;
+    }
+
+    .emoji-main{
+      font-size:42px;
+      line-height:1;
+      filter:drop-shadow(0 0 18px var(--accent-soft));
+      transition:transform .18s ease;
+      user-select:none;
+    }
+
+    .burst{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%, -50%);
+      pointer-events:none;
+      font-size:22px;
+      animation:explode .7s ease-out forwards;
+    }
+
+    @keyframes explode{
+      0%{opacity:1; transform:translate(-50%,-50%) scale(.6);}
+      100%{
+        opacity:0;
+        transform:translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r)) scale(1.2);
+      }
+    }
+
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(2rem,5vw,4rem);
+      line-height:.93;
+      letter-spacing:-.06em;
+      max-width:12ch;
+    }
+
+    .sub{
+      margin:0;
+      max-width:52ch;
+      color:var(--muted);
+      line-height:1.45;
+      font-size:clamp(.98rem,2vw,1.08rem);
+    }
+
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:end;
+      margin:20px 0 16px;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .timebox{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width:220px;
+    }
+
+    .timebox label{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+
+    select, button{
+      appearance:none;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.04);
+      color:var(--ink);
+      padding:14px 16px;
+      font:inherit;
+      cursor:pointer;
+      transition:transform .12s ease, background .12s ease, border-color .12s ease, opacity .12s ease;
+    }
+
+    select{
+      cursor:pointer;
+      min-width:220px;
+    }
+
+    button:hover, select:hover{
+      background:rgba(255,255,255,.08);
+      border-color:rgba(255,255,255,.14);
+    }
+
+    button:active{ transform:translateY(1px) scale(.99); }
+    button:disabled{ opacity:.55; cursor:default; }
+
+    .primary{
+      background:var(--accent-soft);
+      font-weight:700;
+    }
+
+    .meter{
+      height:6px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.04);
+      overflow:hidden;
+      margin-bottom:18px;
+    }
+
+    .meter-fill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, var(--accent), rgba(255,255,255,.85));
+      transition:width .18s linear;
+    }
+
+    .scanner{
+      display:grid;
+      grid-template-columns:1.35fr .9fr 1fr;
+      gap:12px;
+    }
+
+    .pane{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      min-height:240px;
+      padding:16px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .pane-label{
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:12px;
+    }
+
+    .big{
+      font-size:clamp(1.35rem,3vw,2rem);
+      line-height:1.04;
+      letter-spacing:-.05em;
+      max-width:16ch;
+    }
+
+    .mid{
+      font-size:1rem;
+      line-height:1.42;
+      color:var(--muted);
+      max-width:30ch;
+    }
+
+    .stamp{
+      display:inline-flex;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      font-size:11px;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-bottom:14px;
+    }
+
+    .confidence{
+      margin-top:16px;
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .confidence-num{
+      font-size:28px;
+      letter-spacing:-.05em;
+      color:var(--ink);
+      margin-top:4px;
+    }
+
+    .chips{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+
+    .chip{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--muted);
+      padding:9px 11px;
+      font-size:12px;
+      letter-spacing:.04em;
+    }
+
+    .tiny{
+      margin-top:12px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .spin{
+      opacity:.72;
+      filter:blur(.3px);
+    }
+
+    @media (max-width:880px){
+      .scanner{ grid-template-columns:1fr; }
+      .top{ grid-template-columns:1fr; }
+      .emoji-box{ min-height:74px; }
+      .toolbar{ align-items:stretch; }
+      .timebox, select{ min-width:unset; width:100%; }
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(5,7,10,.66);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      z-index:20;
+      backdrop-filter:blur(6px);
+    }
+
+    .overlay.show{ display:flex; }
+
+    .rx-card{
+      width:min(560px,100%);
+      background:#f8f4eb;
+      color:#181818;
+      border:1px solid rgba(0,0,0,.12);
+      box-shadow:0 30px 90px rgba(0,0,0,.45);
+      padding:22px 22px 18px;
+      position:relative;
+      animation:pop .18s ease-out;
+    }
+
+    @keyframes pop{
+      from{ transform:scale(.96) translateY(8px); opacity:.6; }
+      to{ transform:scale(1) translateY(0); opacity:1; }
+    }
+
+    .rx-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:14px;
+    }
+
+    .rx-title{
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:#6f6a63;
+    }
+
+    .rx-close{
+      background:transparent;
+      border:1px solid rgba(0,0,0,.1);
+      color:#333;
+      padding:8px 10px;
+    }
+
+    .rx-icon{
+      font-size:30px;
+      margin-bottom:6px;
+    }
+
+    .rx-name{
+      font-size:clamp(1.35rem,3vw,2rem);
+      line-height:1.02;
+      letter-spacing:-.05em;
+      margin:0 0 10px;
+      max-width:13ch;
+    }
+
+    .rx-script{
+      border-top:1px dashed rgba(0,0,0,.12);
+      border-bottom:1px dashed rgba(0,0,0,.12);
+      padding:16px 0;
+      margin:14px 0;
+      min-height:88px;
+      font-size:1.06rem;
+      line-height:1.45;
+      color:#3a342f;
+    }
+
+    .rx-meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    .rx-pill{
+      border:1px solid rgba(0,0,0,.1);
+      padding:8px 10px;
+      font-size:12px;
+      color:#5a554f;
+      background:rgba(0,0,0,.02);
+    }
+
+    .rx-footer{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+
+    .rx-primary{
+      background:#171717;
+      color:#fff;
+      border-color:#171717;
+    }
+
+    .links{
+      margin-top:14px;
+      display:grid;
+      gap:8px;
+    }
+
+    .links a{
+      color:#3c3c3c;
+      text-decoration:none;
+      border:1px solid rgba(0,0,0,.1);
+      padding:10px 12px;
+      background:rgba(0,0,0,.02);
+    }
+
+    .links a:hover{
+      background:rgba(0,0,0,.04);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="app" id="app">
+      <div class="bar">
+        <div class="dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="title">delay analysis engine</div>
+      </div>
+
+      <div class="main">
+        <div class="top">
+          <div class="emoji-box" id="emojiBox">
+            <div class="emoji-main" id="emojiMain">📱</div>
+          </div>
+
+          <div>
+            <h1>possible reasons they didn’t reply</h1>
+            <p class="sub">
+              A machine for when silence starts looking suspicious. It promises perspective,
+              mild humiliation, and a workable verdict.
+            </p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="controls">
+            <button class="primary" id="analyzeBtn">diagnose silence</button>
+            <button id="prescribeBtn">remedies / solutions</button>
+          </div>
+
+          <div class="timebox">
+            <label for="timeSelect">how long has it been</label>
+            <select id="timeSelect">
+              <option value="5m">like 5 minutes</option>
+              <option value="30m">30 minutes</option>
+              <option value="2h" selected>2 hours</option>
+              <option value="6h">6 hours</option>
+              <option value="12h">12 hours</option>
+              <option value="1d">1 day</option>
+              <option value="3d">3 days</option>
+              <option value="1w">1 week</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="meter">
+          <div class="meter-fill" id="meterFill"></div>
+        </div>
+
+        <div class="scanner">
+          <div class="pane">
+            <div class="pane-label">probable cause</div>
+            <div class="big" id="cause">They are probably doing something boring and real.</div>
+            <div class="chips" id="chips">
+              <div class="chip">civilian activity</div>
+              <div class="chip">not a verdict</div>
+              <div class="chip">deeply ordinary</div>
+            </div>
+          </div>
+
+          <div class="pane">
+            <div class="pane-label">verdict</div>
+            <div class="stamp" id="verdict">annoying but normal</div>
+            <div class="mid" id="verdictText">This remains compatible with them liking you.</div>
+            <div class="confidence">confidence</div>
+            <div class="confidence-num" id="confidenceNum">78%</div>
+          </div>
+
+          <div class="pane">
+            <div class="pane-label">treatment</div>
+            <div class="mid" id="treatmentText">Put the phone down for twelve minutes and let reality catch up to your imagination.</div>
+            <div class="tiny" id="tinyNote">If you are lurking while leaving someone else unread, you are respectfully dismissed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="rx-card">
+      <div class="rx-top">
+        <div>
+          <div class="rx-icon" id="rxIcon">💊</div>
+          <div class="rx-title">prescription</div>
+          <h2 class="rx-name">for acute delay interpretation</h2>
+        </div>
+        <button class="rx-close" id="closeRx">close</button>
+      </div>
+
+      <div class="rx-meta">
+        <div class="rx-pill">refills: unlimited</div>
+        <div class="rx-pill">take as needed</div>
+        <div class="rx-pill">side effects: dignity</div>
+      </div>
+
+      <div class="rx-script" id="rxScript">
+        walk until this gets less cinematic
+      </div>
+
+      <div class="rx-footer">
+        <button class="rx-primary" id="newRx">new prescription</button>
+      </div>
+
+      <div class="links">
+        <a href="https://haylortall.github.io/potato/" target="_blank">click for surprise: potato</a>
+        <a href="https://haylortall.github.io/star/" target="_blank">play another game: star</a>
+        <a href="https://haylortall.github.io/" target="_blank">main site</a>
+        <a href="#" id="redditPlaceholder">read this reddit post (placeholder)</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const baseCases = [
+      {
+        emoji:"💼",
+        burst:["💼","🕒","📱","😐"],
+        cause:"They have a job.",
+        verdict:"annoying but normal",
+        verdictText:"I know. Devastating. But still more ordinary than sinister.",
+        treatment:"Go do one boring thing of your own so this stops feeling like sacred cinema.",
+        chips:["employment","civilian activity","annoying but healthy"],
+        tiny:"He did not become a different species because he took four hours.",
+        confidence:78,
+        bg:"#0d1118",
+        card:"#151b26",
+        accent:"#8fb3ff"
+      },
+      {
+        emoji:"🧘",
+        burst:["🧘","☁️","🌿","🫶"],
+        cause:"They might just be calm.",
+        verdict:"calm, unfortunately",
+        verdictText:"Calm can feel suspicious when you are used to chaos being more responsive.",
+        treatment:"Do not punish calm just because it arrives in a font you are not used to reading.",
+        chips:["regulated","not a threat","unfortunately healthy"],
+        tiny:"This may be what normal pacing feels like. Sorry.",
+        confidence:72,
+        bg:"#0f1511",
+        card:"#18211b",
+        accent:"#91d4ab"
+      },
+      {
+        emoji:"🙃",
+        burst:["🙃","🫠","📨","😬"],
+        cause:"They replied in their head and accidentally awarded themselves full credit.",
+        verdict:"embarrassing for them",
+        verdictText:"Weak behavior. Common behavior. Still not necessarily anti-you.",
+        treatment:"Roll your eyes with affection and move one inch away from the evidence board.",
+        chips:["unfinished task","male behavior","shame-adjacent"],
+        tiny:"Many such men are walking among us.",
+        confidence:83,
+        bg:"#151016",
+        card:"#211925",
+        accent:"#d9a2cb"
+      },
+      {
+        emoji:"📵",
+        burst:["📵","⌛","📱","🫥"],
+        cause:"Phone on do not disturb.",
+        verdict:"technological betrayal",
+        verdictText:"A scheduling issue wearing the costume of emotional meaning.",
+        treatment:"Resist assigning lore to a setting in an operating system.",
+        chips:["ios problem","not a plot twist","personally offensive"],
+        tiny:"Technology loves a charged little gap.",
+        confidence:69,
+        bg:"#10131a",
+        card:"#181d28",
+        accent:"#9bb9ff"
+      },
+      {
+        emoji:"🎭",
+        burst:["🎭","🎬","📱","😭"],
+        cause:"Your brain is writing prestige television about a scheduling issue.",
+        verdict:"excellent production design",
+        verdictText:"Strong visuals. Weak evidence. Compelling score though.",
+        treatment:"Cancel the season after one episode and go hydrate.",
+        chips:["award bait","limited series","not peer reviewed"],
+        tiny:"This is one of your better internal productions, unfortunately.",
+        confidence:90,
+        bg:"#121018",
+        card:"#1b1824",
+        accent:"#b49eff"
+      },
+      {
+        emoji:"🧐",
+        burst:["🧐","📋","⚖️","🙄"],
+        cause:"You are trying to derive a permanent truth from a temporary gap.",
+        verdict:"please be serious",
+        verdictText:"This note is written with love and mild fatigue.",
+        treatment:"Stop cross-examining the silence. The witness has not even taken the stand.",
+        chips:["committee review","gently roasted","stand down"],
+        tiny:"You do not need a forensic team for this one.",
+        confidence:88,
+        bg:"#121212",
+        card:"#1a1a1a",
+        accent:"#f0d46f"
+      },
+      {
+        emoji:"💬",
+        burst:["💬","🖋️","💘","🫣"],
+        cause:"They may want to answer properly because your message mattered.",
+        verdict:"romantic, unfortunately",
+        verdictText:"Silence is not always indifference. Sometimes it is formatting and tone control.",
+        treatment:"Let them finish editing themselves into a person they can live with.",
+        chips:["decent intentions","ugly timing","earnest risk"],
+        tiny:"Some people need a minute to not sound like a diary entry.",
+        confidence:58,
+        bg:"#10131b",
+        card:"#171d29",
+        accent:"#8fb7ff"
+      },
+      {
+        emoji:"🔕",
+        burst:["🔕","📱","⌛","😶"],
+        cause:"Do not disturb exists and it hates you personally.",
+        verdict:"digital sabotage",
+        verdictText:"Software keeps creating emotionally charged little gaps where nothing spiritually significant occurred.",
+        treatment:"Blame the operating system a little. It can take it.",
+        chips:["os crime","not symbolic","personally rude"],
+        tiny:"No one asked software to get involved in this.",
+        confidence:74,
+        bg:"#101217",
+        card:"#171b23",
+        accent:"#9aa8d5"
+      },
+      {
+        emoji:"🫠",
+        burst:["🫠","🤦","📨","🧍"],
+        cause:"He may have seen it, felt something, and then become briefly stupid.",
+        verdict:"boy behavior",
+        verdictText:"This appears to be common in men with jobs and emotions.",
+        treatment:"Do not over-reward confusion, but do allow for temporary idiocy.",
+        chips:["cognitive wobble","male glitch","not ideal"],
+        tiny:"The system encountered feelings and lost stability.",
+        confidence:80,
+        bg:"#141016",
+        card:"#1f1821",
+        accent:"#d59cff"
+      },
+      {
+        emoji:"🏋️",
+        burst:["🏋️","💧","🫥","⌛"],
+        cause:"They may be in the gym, in transit, or doing some healthy nonsense.",
+        verdict:"respectable, unfortunately",
+        verdictText:"Harder to villainize when it is literally hydration and discipline.",
+        treatment:"If this offends you, do one squat out of spite.",
+        chips:["wellness propaganda","hard to litigate","annoyingly decent"],
+        tiny:"Some absences are just protein-shaped.",
+        confidence:71,
+        bg:"#101410",
+        card:"#171d18",
+        accent:"#9fd39c"
+      },
+      {
+        emoji:"🚨",
+        burst:["🚨","📴","👋","🧾"],
+        cause:"If you are lurking while leaving someone else unread, you are dismissed.",
+        verdict:"court order",
+        verdictText:"The court finds this behavior extremely familiar and a little funny.",
+        treatment:"Close the app and return when you are more innocent.",
+        chips:["hypocrisy-adjacent","respectfully dismissed","case closed"],
+        tiny:"No more evidence collection tonight.",
+        confidence:97,
+        bg:"#160f12",
+        card:"#22161b",
+        accent:"#ff7f9e"
+      },
+      {
+        emoji:"☕",
+        burst:["☕","🪑","🌧️","📚"],
+        cause:"They may just be existing at a human pace.",
+        verdict:"annoyingly sane",
+        verdictText:"Not everyone experiences connection as an invitation to immediately combust.",
+        treatment:"Borrow some of that pace instead of resenting it.",
+        chips:["calm metabolism","not personal","possibly aspirational"],
+        tiny:"This may be what healthy looks like in civilian clothes.",
+        confidence:73,
+        bg:"#14110f",
+        card:"#201916",
+        accent:"#d8b08e"
+      },
+      {
+        emoji:"🛒",
+        burst:["🛒","🍊","📦","🚗"],
+        cause:"They may literally be at the store.",
+        verdict:"humiliatingly mundane",
+        verdictText:"No betrayal. No strategy. Just fluorescent lighting and one loud cart wheel.",
+        treatment:"Imagine this person holding produce. Feel better immediately.",
+        chips:["civilian errand","costco possibility","deeply ordinary"],
+        tiny:"Reality is often less elegant than your fear.",
+        confidence:67,
+        bg:"#101510",
+        card:"#182018",
+        accent:"#abd98b"
+      },
+      {
+        emoji:"📞",
+        burst:["📞","👨‍👩‍👧","🫠","🧍"],
+        cause:"A family call may have happened.",
+        verdict:"someone’s son for a while",
+        verdictText:"Some people have to pause being flirtatious and start handling their actual human context.",
+        treatment:"Allow them a temporary return to civilian duty.",
+        chips:["real life","not about you","deeply unglamorous"],
+        tiny:"The plot can survive one parent phone call.",
+        confidence:63,
+        bg:"#15100f",
+        card:"#211815",
+        accent:"#ffb27c"
+      },
+      {
+        emoji:"🪫",
+        burst:["🪫","📱","⚰️","😐"],
+        cause:"Battery death. Ancient. Petty. Real.",
+        verdict:"low-tech humiliation",
+        verdictText:"Imagine all this emotional theater over three percent.",
+        treatment:"Respect the power bank deficit and move with dignity.",
+        chips:["3 percent enemy","not fate","charged tomorrow"],
+        tiny:"Many feelings have been ruined by avoidable logistics.",
+        confidence:66,
+        bg:"#101010",
+        card:"#191919",
+        accent:"#c8c8c8"
+      },
+      {
+        emoji:"🛋️",
+        burst:["🛋️","🧠","📝","☁️"],
+        cause:"The gap is activating something older than this person.",
+        verdict:"archive material",
+        verdictText:"The feeling is real. The interpretation may be importing extra files from storage.",
+        treatment:"Thank your brain for the warning and then maybe do not hand it the microphone.",
+        chips:["therapist-coded","old file opened","context matters"],
+        tiny:"This one is about context, not self-blame.",
+        confidence:76,
+        bg:"#101219",
+        card:"#191d28",
+        accent:"#a7b7ff"
+      },
+
+      {
+        emoji:"💸",
+        burst:["💸","📉","⏰","😐"],
+        cause:"For every hour they do not reply, they are apparently losing money somehow.",
+        verdict:"financially humiliating",
+        verdictText:"A deeply unserious but emotionally satisfying theory.",
+        treatment:"Allow yourself this fantasy for seven seconds and then return to civilian law.",
+        chips:["capitalism","imaginary punishment","petty relief"],
+        tiny:"Their silence is now an invoice.",
+        confidence:44,
+        bg:"#11140f",
+        card:"#1a2016",
+        accent:"#c7df76"
+      },
+      {
+        emoji:"🧑‍🦲",
+        burst:["🧑‍🦲","💨","📉","🫢"],
+        cause:"They are balding two percent of their total hairs every time they fail to worship the ground you walk on.",
+        verdict:"cosmic rebalancing",
+        verdictText:"Not scientifically supported. Spiritually reassuring.",
+        treatment:"Accept this image as a temporary public service to your dignity.",
+        chips:["hairline tax","fiction but healing","be serious"],
+        tiny:"Some losses are follicular.",
+        confidence:39,
+        bg:"#141210",
+        card:"#1d1917",
+        accent:"#d7b88a"
+      },
+      {
+        emoji:"💀",
+        burst:["💀","📺","⭐","📵"],
+        cause:"They were abruptly recruited for reality TV and their phone was suspended for the unforeseeable future.",
+        verdict:"production interference",
+        verdictText:"This would explain a lot, though not in a court of law.",
+        treatment:"Assume there are cameras and continue behaving mysteriously.",
+        chips:["unscripted programming","network issue","rare event"],
+        tiny:"Guaranteed on some level he is struggling.",
+        confidence:22,
+        bg:"#171015",
+        card:"#231821",
+        accent:"#ff9fd4"
+      },
+      {
+        emoji:"🫠",
+        burst:["🫠","🚑","📞","🛏️"],
+        cause:"Maybe he has fallen and cannot get up.",
+        verdict:"medically inconvenient",
+        verdictText:"A little extreme. Still technically possible.",
+        treatment:"Do not romanticize this. Just note the possibility and hydrate.",
+        chips:["unlikely","still possible","deeply unglamorous"],
+        tiny:"We do not currently have evidence of floor involvement.",
+        confidence:17,
+        bg:"#141112",
+        card:"#1d1819",
+        accent:"#d7a8b9"
+      },
+      {
+        emoji:"🧻",
+        burst:["🧻","🫣","💨","🚽"],
+        cause:"IBS flare up. He is literally not the same person right now.",
+        verdict:"gastrointestinal emergency",
+        verdictText:"There are indignities in this world that outrank texting.",
+        treatment:"Grant him digestive asylum and keep your dignity moving.",
+        chips:["stomach war","civilian tragedy","deeply human"],
+        tiny:"No one is seductive in this scenario.",
+        confidence:57,
+        bg:"#13110f",
+        card:"#1b1815",
+        accent:"#d6b48a"
+      },
+      {
+        emoji:"😈",
+        burst:["😈","🕯️","🫣","⚔️"],
+        cause:"He is being tempted by worldly demons and respects you too much to involve you.",
+        verdict:"spiritually compromised",
+        verdictText:"Not ideal. Weirdly flattering framework though.",
+        treatment:"Let the demons work through their shift without making it your internship.",
+        chips:["metaphysical issue","not your circus","surprisingly poetic"],
+        tiny:"Boundaries are holy.",
+        confidence:28,
+        bg:"#160f13",
+        card:"#21171c",
+        accent:"#ff8fb5"
+      },
+      {
+        emoji:"🫥",
+        burst:["🫥","🌫️","🧠","🫶"],
+        cause:"Possibly fighting battles nobody knows about.",
+        verdict:"quietly human",
+        verdictText:"Unfortunately nobody is perfect all the time.",
+        treatment:"Hold your compassion without writing a novel about it.",
+        chips:["private struggle","not all visible","human mess"],
+        tiny:"Distance is not always malice.",
+        confidence:62,
+        bg:"#101217",
+        card:"#171b23",
+        accent:"#a9b8d4"
+      },
+      {
+        emoji:"😵‍💫",
+        burst:["😵‍💫","📱","☁️","🪫"],
+        cause:"Isn’t texting all day tiring? Take a break, girl. You are free.",
+        verdict:"release granted",
+        verdictText:"The republic of your nervous system has announced open borders.",
+        treatment:"Stop clocking the silence and go rejoin your own life.",
+        chips:["permission slip","touch grass","you are free"],
+        tiny:"Not every pause requires a hearing.",
+        confidence:85,
+        bg:"#101419",
+        card:"#171d25",
+        accent:"#9fc5ff"
+      },
+      {
+        emoji:"🔥",
+        burst:["🔥","🧴","🫧","🧖‍♀️"],
+        cause:"You are so hot the response requires emotional PPE.",
+        verdict:"heat advisory",
+        verdictText:"An irresponsible theory. Still worth keeping near the top of the stack.",
+        treatment:"Moisturize, stretch, and continue being an infrastructural challenge.",
+        chips:["hot tax","protective equipment needed","delusional but useful"],
+        tiny:"Beauty can delay operations.",
+        confidence:36,
+        bg:"#17110f",
+        card:"#221814",
+        accent:"#ff9d70"
+      },
+      {
+        emoji:"🏡",
+        burst:["🏡","💭","💍","📐"],
+        cause:"They are planning their future with you and accidentally disappeared into a private mental PowerPoint.",
+        verdict:"premature domesticity",
+        verdictText:"Unlikely, but not the worst thing your brain has pitched today.",
+        treatment:"Let them finish drafting the emotional zoning map in peace.",
+        chips:["future tense","private powerpoint","romance infrastructure"],
+        tiny:"He is somewhere choosing throw pillows in theory.",
+        confidence:19,
+        bg:"#11140f",
+        card:"#1a1e16",
+        accent:"#b8d78a"
+      },
+      {
+        emoji:"😬",
+        burst:["😬","📉","🫥","🚪"],
+        cause:"They’re just not that into it.",
+        verdict:"possible, not fatal",
+        verdictText:"This is part of the range of adult life and not a referendum on your value.",
+        treatment:"Do not over-negotiate with indifference. Redirect your energy with dignity.",
+        chips:["low return","not your fault","data point"],
+        tiny:"Hard truths do not require self-erasure.",
+        confidence:48,
+        bg:"#121212",
+        card:"#1b1b1b",
+        accent:"#b8b8b8"
+      },
+      {
+        emoji:"🫗",
+        burst:["🫗","🧠","🪫","📱"],
+        cause:"Low emotional capacity.",
+        verdict:"under-resourced",
+        verdictText:"Some people do not have much bandwidth, even when they are technically interested.",
+        treatment:"Notice it early. Do not volunteer to become a life support system.",
+        chips:["bandwidth issue","capacity cap","observe closely"],
+        tiny:"Interest and capacity are not identical twins.",
+        confidence:59,
+        bg:"#101216",
+        card:"#171b22",
+        accent:"#a6b0c7"
+      },
+      {
+        emoji:"😳",
+        burst:["😳","💘","🫣","📵"],
+        cause:"They are so in love with you they are terrified.",
+        verdict:"cinematically convenient",
+        verdictText:"One of the prettier theories available to you today.",
+        treatment:"Enjoy briefly. Do not base fiscal policy on it.",
+        chips:["pretty theory","use sparingly","emotionally expensive"],
+        tiny:"Not evidence. Just atmosphere.",
+        confidence:25,
+        bg:"#151018",
+        card:"#201824",
+        accent:"#d8a1ff"
+      }
+    ];
+
+    const remedies = [
+      { text:"walk until this gets less cinematic", icon:"🚶" },
+      { text:"red wine, if you are being elegant about it", icon:"🍷" },
+      { text:"shower and become a different woman", icon:"🚿" },
+      { text:"playlist that makes you feel expensive", icon:"🎧" },
+      { text:"put your phone in another room for twelve minutes", icon:"📵" },
+      { text:"clean one surface and act like you are restoring order to the republic", icon:"🧽" },
+      { text:"text someone safe", icon:"💬" },
+      { text:"water. then a second water.", icon:"🧃" },
+      { text:"stop gathering evidence like this is a senate hearing", icon:"📋" },
+      { text:"sleep, unfortunately", icon:"🌙" },
+      { text:"look at a tree and remember scale", icon:"🌳" },
+      { text:"eat something with protein before assigning symbolism", icon:"🍳" },
+      { text:"face mask and pretend this was character building", icon:"🧖‍♀️" },
+      { text:"moisturize. no, really.", icon:"🧴" },
+      { text:"stretch like you are returning to the body", icon:"🧘" },
+      { text:"if you have a pet, you have everything you need", icon:"🐾" },
+      { text:"do not watch his story. reclaim your frontal lobe.", icon:"🚫" }
+    ];
+
+    let index = 0;
+    let spinning = false;
+
+    const app = document.getElementById("app");
+    const emojiBox = document.getElementById("emojiBox");
+    const emojiMain = document.getElementById("emojiMain");
+    const cause = document.getElementById("cause");
+    const verdict = document.getElementById("verdict");
+    const verdictText = document.getElementById("verdictText");
+    const treatmentText = document.getElementById("treatmentText");
+    const tinyNote = document.getElementById("tinyNote");
+    const confidenceNum = document.getElementById("confidenceNum");
+    const chips = document.getElementById("chips");
+    const meterFill = document.getElementById("meterFill");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const prescribeBtn = document.getElementById("prescribeBtn");
+    const timeSelect = document.getElementById("timeSelect");
+
+    const overlay = document.getElementById("overlay");
+    const closeRx = document.getElementById("closeRx");
+    const newRx = document.getElementById("newRx");
+    const rxScript = document.getElementById("rxScript");
+    const rxIcon = document.getElementById("rxIcon");
+
+    function getPoolByTime() {
+      const t = timeSelect.value;
+
+      if (t === "5m") {
+        return baseCases.filter(c =>
+          !c.cause.includes("just not that into") &&
+          !c.cause.includes("Low emotional capacity")
+        );
+      }
+
+      if (t === "30m") {
+        return baseCases.filter(c =>
+          !c.cause.includes("just not that into")
+        );
+      }
+
+      if (t === "2h") {
+        return baseCases;
+      }
+
+      if (t === "6h" || t === "12h") {
+        return baseCases;
+      }
+
+      if (t === "1d") {
+        return baseCases.map(c => {
+          if (c.cause.includes("They have a job.")) {
+            return { ...c, confidence: 64, verdict: "still plausible" };
+          }
+          return c;
+        });
+      }
+
+      if (t === "3d" || t === "1w") {
+        return baseCases.map(c => {
+          if (c.cause.includes("They’re just not that into it.")) {
+            return { ...c, confidence: 72 };
+          }
+          if (c.cause.includes("Low emotional capacity.")) {
+            return { ...c, confidence: 70 };
+          }
+          return c;
+        });
+      }
+
+      return baseCases;
+    }
+
+    function setCase(item){
+      emojiMain.textContent = item.emoji;
+      cause.textContent = item.cause;
+      verdict.textContent = item.verdict;
+      verdictText.textContent = item.verdictText;
+      confidenceNum.textContent = `${item.confidence}%`;
+      treatmentText.textContent = item.treatment;
+      tinyNote.textContent = item.tiny;
+
+      chips.innerHTML = "";
+      item.chips.forEach(text => {
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.textContent = text;
+        chips.appendChild(chip);
+      });
+
+      document.body.style.background =
+        `radial-gradient(circle at 12% 10%, ${hexToRgba(item.accent, .14)}, transparent 24%),
+         radial-gradient(circle at 88% 14%, ${hexToRgba(item.accent, .10)}, transparent 18%),
+         linear-gradient(180deg, ${lighten(item.bg, 5)}, ${item.bg})`;
+
+      app.style.background = `linear-gradient(180deg, ${lighten(item.card, 3)}, ${item.card})`;
+      app.style.borderColor = hexToRgba(item.accent, .22);
+      document.documentElement.style.setProperty("--accent", item.accent);
+      document.documentElement.style.setProperty("--accent-soft", hexToRgba(item.accent, .18));
+
+      app.classList.remove("flash");
+      void app.offsetWidth;
+      app.classList.add("flash");
+
+      explode(item.burst);
+    }
+
+    function animateScan(){
+      if (spinning) return;
+      spinning = true;
+      analyzeBtn.disabled = true;
+
+      const pool = getPoolByTime();
+      let steps = 8 + Math.floor(Math.random() * 5);
+      let progress = 0;
+      meterFill.style.width = "0%";
+
+      const interval = setInterval(() => {
+        progress += 100 / steps;
+        meterFill.style.width = `${Math.min(progress, 100)}%`;
+
+        const temp = pool[Math.floor(Math.random() * pool.length)];
+        emojiMain.textContent = temp.emoji;
+        cause.textContent = temp.cause;
+        verdict.textContent = temp.verdict;
+        verdictText.textContent = temp.verdictText;
+        confidenceNum.textContent = `${temp.confidence}%`;
+
+        cause.classList.add("spin");
+        verdict.classList.add("spin");
+        verdictText.classList.add("spin");
+        confidenceNum.classList.add("spin");
+
+        explode(temp.burst);
+
+        steps--;
+        if (steps <= 0){
+          clearInterval(interval);
+          cause.classList.remove("spin");
+          verdict.classList.remove("spin");
+          verdictText.classList.remove("spin");
+          confidenceNum.classList.remove("spin");
+
+          const finalPick = pool[Math.floor(Math.random() * pool.length)];
+          setCase(finalPick);
+
+          meterFill.style.width = "100%";
+          setTimeout(() => { meterFill.style.width = "0%"; }, 260);
+          spinning = false;
+          analyzeBtn.disabled = false;
+          analyzeBtn.textContent = "analyze again";
+        }
+      }, 90);
+    }
+
+    function openPrescription(){
+      givePrescription();
+      overlay.classList.add("show");
+      explode(["🍷","🚿","🚶","🧃","🕯️","🎧","💊","🧴","🐾"]);
+    }
+
+    function closePrescription(){
+      overlay.classList.remove("show");
+    }
+
+    function givePrescription(){
+      const choice = remedies[Math.floor(Math.random() * remedies.length)];
+      rxScript.textContent = choice.text;
+      rxIcon.textContent = choice.icon;
+    }
+
+    function explode(chars){
+      emojiBox.querySelectorAll(".burst").forEach(n => n.remove());
+
+      for (let i = 0; i < 10; i++){
+        const el = document.createElement("div");
+        el.className = "burst";
+        el.textContent = chars[Math.floor(Math.random() * chars.length)];
+        el.style.setProperty("--x", `${(Math.random() - .5) * 220}px`);
+        el.style.setProperty("--y", `${(Math.random() - .5) * 160}px`);
+        el.style.setProperty("--r", `${(Math.random() - .5) * 150}deg`);
+        emojiBox.appendChild(el);
+        setTimeout(() => el.remove(), 720);
+      }
+
+      emojiMain.style.transform = "scale(1.12)";
+      setTimeout(() => { emojiMain.style.transform = "scale(1)"; }, 160);
+    }
+
+    function hexToRgba(hex, alpha){
+      const h = hex.replace("#","");
+      const bigint = parseInt(h, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function lighten(hex, amt){
+      const h = hex.replace("#","");
+      let r = parseInt(h.substring(0,2),16);
+      let g = parseInt(h.substring(2,4),16);
+      let b = parseInt(h.substring(4,6),16);
+      r = Math.min(255, r + amt);
+      g = Math.min(255, g + amt);
+      b = Math.min(255, b + amt);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    analyzeBtn.addEventListener("click", animateScan);
+    prescribeBtn.addEventListener("click", openPrescription);
+    closeRx.addEventListener("click", closePrescription);
+    newRx.addEventListener("click", givePrescription);
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closePrescription();
+    });
+
+    document.getElementById("redditPlaceholder").addEventListener("click", (e) => {
+      e.preventDefault();
+      alert("Paste a real Reddit link here if you want one.");
+    });
+
+    setCase(baseCases[0]);
+  </script>
+</body>
+</html>
